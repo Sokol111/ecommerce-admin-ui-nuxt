@@ -26,18 +26,17 @@ const isLoading = ref(false)
 async function onSubmit() {
   isLoading.value = true
 
-  try {
-    await login(state.email, state.password)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Login failed'
+  const success = await login(state.email, state.password)
+
+  if (!success) {
     toast.add({
       title: 'Error',
-      description: message,
+      description: 'Login failed',
       color: 'error'
     })
-  } finally {
-    isLoading.value = false
   }
+
+  isLoading.value = false
 }
 </script>
 

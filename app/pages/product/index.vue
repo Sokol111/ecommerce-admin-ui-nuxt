@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui'
 import type { ProductResponse } from '@sokol111/ecommerce-catalog-service-api'
 
 const route = useRoute()
@@ -16,13 +17,13 @@ const { data, pending, error, refresh } = await useFetch('/api/catalog/products'
 })
 
 // Table columns
-const columns = [
-  { key: 'name', label: 'Name' },
-  { key: 'price', label: 'Price' },
-  { key: 'quantity', label: 'Quantity' },
-  { key: 'enabled', label: 'Status' },
-  { key: 'createdAt', label: 'Created At' },
-  { key: 'actions', label: '' }
+const columns: TableColumn<ProductResponse>[] = [
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'price', header: 'Price' },
+  { accessorKey: 'quantity', header: 'Quantity' },
+  { accessorKey: 'enabled', header: 'Status' },
+  { accessorKey: 'createdAt', header: 'Created At' },
+  { id: 'actions', header: '' }
 ]
 
 // Actions menu items
@@ -99,38 +100,38 @@ function handlePageChange(newPage: number) {
     <UCard>
       <UTable
         :columns="columns"
-        :rows="data?.items || []"
+        :data="data?.items || []"
         :loading="pending"
       >
         <template #name-cell="{ row }">
-          <span class="font-medium">{{ row.name }}</span>
+          <span class="font-medium">{{ row.original.name }}</span>
         </template>
 
         <template #price-cell="{ row }">
-          ${{ row.price.toFixed(2) }}
+          ${{ row.original.price.toFixed(2) }}
         </template>
 
         <template #quantity-cell="{ row }">
           <UBadge color="neutral" variant="subtle">
-            {{ row.quantity }}
+            {{ row.original.quantity }}
           </UBadge>
         </template>
 
         <template #enabled-cell="{ row }">
-          <UBadge :color="row.enabled ? 'success' : 'neutral'">
-            {{ row.enabled ? 'Enabled' : 'Disabled' }}
+          <UBadge :color="row.original.enabled ? 'success' : 'neutral'">
+            {{ row.original.enabled ? 'Enabled' : 'Disabled' }}
           </UBadge>
         </template>
 
         <template #createdAt-cell="{ row }">
           <div class="text-sm">
-            <div>{{ formatDate(row.createdAt).date }}</div>
-            <div class="text-muted">{{ formatDate(row.createdAt).time }}</div>
+            <div>{{ formatDate(row.original.createdAt).date }}</div>
+            <div class="text-muted">{{ formatDate(row.original.createdAt).time }}</div>
           </div>
         </template>
 
         <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getRowActions(row)">
+          <UDropdownMenu :items="getRowActions(row.original)">
             <UButton
               color="neutral"
               variant="ghost"

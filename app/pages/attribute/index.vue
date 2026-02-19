@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui'
 import type { AttributeResponse } from '@sokol111/ecommerce-catalog-service-api'
 
 const route = useRoute()
@@ -16,13 +17,13 @@ const { data, pending, error } = await useFetch('/api/catalog/attributes', {
 })
 
 // Table columns
-const columns = [
-  { key: 'name', label: 'Name' },
-  { key: 'slug', label: 'Slug' },
-  { key: 'type', label: 'Type' },
-  { key: 'options', label: 'Options' },
-  { key: 'enabled', label: 'Status' },
-  { key: 'actions', label: '' }
+const columns: TableColumn<AttributeResponse>[] = [
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'slug', header: 'Slug' },
+  { accessorKey: 'type', header: 'Type' },
+  { accessorKey: 'options', header: 'Options' },
+  { accessorKey: 'enabled', header: 'Status' },
+  { id: 'actions', header: '' }
 ]
 
 // Actions menu items
@@ -92,37 +93,37 @@ const typeLabels: Record<string, string> = {
     <UCard>
       <UTable
         :columns="columns"
-        :rows="data?.items || []"
+        :data="data?.items || []"
         :loading="pending"
       >
         <template #name-cell="{ row }">
-          <span class="font-medium">{{ row.name }}</span>
+          <span class="font-medium">{{ row.original.name }}</span>
         </template>
 
         <template #slug-cell="{ row }">
-          <code class="text-sm bg-muted px-2 py-0.5 rounded">{{ row.slug }}</code>
+          <code class="text-sm bg-muted px-2 py-0.5 rounded">{{ row.original.slug }}</code>
         </template>
 
         <template #type-cell="{ row }">
           <UBadge color="info" variant="subtle">
-            {{ typeLabels[row.type] || row.type }}
+            {{ typeLabels[row.original.type] || row.original.type }}
           </UBadge>
         </template>
 
         <template #options-cell="{ row }">
           <UBadge color="neutral" variant="subtle">
-            {{ row.options?.length || 0 }}
+            {{ row.original.options?.length || 0 }}
           </UBadge>
         </template>
 
         <template #enabled-cell="{ row }">
-          <UBadge :color="row.enabled ? 'success' : 'neutral'">
-            {{ row.enabled ? 'Enabled' : 'Disabled' }}
+          <UBadge :color="row.original.enabled ? 'success' : 'neutral'">
+            {{ row.original.enabled ? 'Enabled' : 'Disabled' }}
           </UBadge>
         </template>
 
         <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getRowActions(row)">
+          <UDropdownMenu :items="getRowActions(row.original)">
             <UButton
               color="neutral"
               variant="ghost"

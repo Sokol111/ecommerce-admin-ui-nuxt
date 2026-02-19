@@ -56,7 +56,7 @@ async function handleSubmit(data: AttributeFormData) {
   })
 
   if (error.value || !result.value?.success) {
-    const errData = result.value?.error
+    const errData = 'error' in result.value! ? result.value.error : undefined
     toast.add({
       title: errData?.title || 'Error',
       description: errData?.detail || 'Failed to update attribute',

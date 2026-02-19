@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { TableColumn } from '@nuxt/ui'
 import type { CategoryResponse } from '@sokol111/ecommerce-catalog-service-api'
 
 const route = useRoute()
@@ -16,11 +17,11 @@ const { data, pending, error } = await useFetch('/api/catalog/categories', {
 })
 
 // Table columns
-const columns = [
-  { key: 'name', label: 'Name' },
-  { key: 'attributes', label: 'Attributes' },
-  { key: 'enabled', label: 'Status' },
-  { key: 'actions', label: '' }
+const columns: TableColumn<CategoryResponse>[] = [
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'attributes', header: 'Attributes' },
+  { accessorKey: 'enabled', header: 'Status' },
+  { id: 'actions', header: '' }
 ]
 
 // Actions menu items
@@ -81,27 +82,27 @@ function handlePageChange(newPage: number) {
     <UCard>
       <UTable
         :columns="columns"
-        :rows="data?.items || []"
+        :data="data?.items || []"
         :loading="pending"
       >
         <template #name-cell="{ row }">
-          <span class="font-medium">{{ row.name }}</span>
+          <span class="font-medium">{{ row.original.name }}</span>
         </template>
 
         <template #attributes-cell="{ row }">
           <UBadge color="neutral" variant="subtle">
-            {{ row.attributes?.length || 0 }}
+            {{ row.original.attributes?.length || 0 }}
           </UBadge>
         </template>
 
         <template #enabled-cell="{ row }">
-          <UBadge :color="row.enabled ? 'success' : 'neutral'">
-            {{ row.enabled ? 'Enabled' : 'Disabled' }}
+          <UBadge :color="row.original.enabled ? 'success' : 'neutral'">
+            {{ row.original.enabled ? 'Enabled' : 'Disabled' }}
           </UBadge>
         </template>
 
         <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getRowActions(row)">
+          <UDropdownMenu :items="getRowActions(row.original)">
             <UButton
               color="neutral"
               variant="ghost"
