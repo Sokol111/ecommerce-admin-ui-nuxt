@@ -1,12 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: [
-    '@nuxt/eslint',
-    '@nuxt/ui',
-    '@pinia/nuxt',
-    '@vueuse/nuxt',
-    '@vee-validate/nuxt'
-  ],
+  modules: ['@nuxt/eslint', '@nuxt/ui', '@pinia/nuxt', '@vueuse/nuxt'],
 
   devtools: {
     enabled: true
@@ -14,8 +8,27 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    // Server-only (not exposed to client)
+    // Values are set from .env: NUXT_AUTH_API_URL, NUXT_CATALOG_API_URL, etc.
+    authApiUrl: '',
+    catalogApiUrl: '',
+    imageApiUrl: '',
+
+    // Cookie settings
+    cookieSecure: false,
+    cookieSameSite: 'lax',
+
+    // Public (exposed to client)
+    public: {
+      authApiUrl: '',
+      catalogApiUrl: '',
+      imageApiUrl: ''
+    }
+  },
+
   routeRules: {
-    '/': { prerender: true }
+    '/login': { ssr: true }
   },
 
   compatibilityDate: '2025-01-15',
@@ -23,8 +36,11 @@ export default defineNuxtConfig({
   eslint: {
     config: {
       stylistic: {
+        quotes: 'single',
+        semi: false,
         commaDangle: 'never',
-        braceStyle: '1tbs'
+        braceStyle: '1tbs',
+        arrowParens: true
       }
     }
   }
