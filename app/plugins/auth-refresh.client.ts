@@ -1,12 +1,30 @@
-// Auto-refresh token every 4 minutes (assuming token lives ~5 min)
-const REFRESH_INTERVAL_MS = 4 * 60 * 1000
+import { TOKEN_EXPIRY_BUFFER_MS } from '~/utils/auth/constants'
 
 export default defineNuxtPlugin(() => {
-  const { isAuthenticated, refreshSession } = useAuth()
+  const { isAuthenticated, tokenExpiresAt, ensureAuthenticated } = useAuth()
 
-  setInterval(async () => {
-    if (isAuthenticated.value) {
-      await refreshSession()
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+  const scheduleRefresh = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+      timeoutId = null
     }
-  }, REFRESH_INTERVAL_MS)
+
+    if (!isAuthenticated.value || !tokenExpiresAt.value) {
+      return
+    }
+
+    const refreshAt = Math.max(0, tokenExpiresAt.value - TOKEN_EXPIRY_BUFFER_MS - Date.now())
+
+    timeoutId = setTimeout(() => {
+      ensureAuthenticated()
+    }, refreshAt)
+  }
+
+  watch(
+    [isAuthenticated, tokenExpiresAt],
+    () => scheduleRefresh(),
+    { immediate: true }
+  )
 })

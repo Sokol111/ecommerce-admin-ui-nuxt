@@ -8,6 +8,17 @@ export function useAuth() {
   const user = useState<AdminUserProfile | null>('auth:user', () => null)
   const isLoading = useState<boolean>('auth:loading', () => true)
   const isAuthenticated = computed(() => !!user.value)
+  const tokenExpiresAtCookie = useCookie(ACCESS_TOKEN_EXPIRES_AT_KEY)
+  const tokenExpiresAt = computed(() => {
+    const value = tokenExpiresAtCookie.value
+    return value ? parseInt(value, 10) : null
+  })
+
+  const refreshTokenExpiry = () => {
+    if (import.meta.client) {
+      refreshCookie(ACCESS_TOKEN_EXPIRES_AT_KEY)
+    }
+  }
 
   const getHeaders = (): HeadersInit | undefined => {
     if (import.meta.server) {
@@ -15,14 +26,6 @@ export function useAuth() {
       return event?.headers
     }
     return undefined
-  }
-
-  const getTokenExpiry = (): string | null | undefined => {
-    if (import.meta.server) {
-      const event = useRequestEvent()
-      return event ? getCookie(event, ACCESS_TOKEN_EXPIRES_AT_KEY) : undefined
-    }
-    return useCookie(ACCESS_TOKEN_EXPIRES_AT_KEY).value
   }
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -33,6 +36,7 @@ export function useAuth() {
       })
 
       user.value = response.user
+      refreshTokenExpiry()
       await navigateTo('/')
       return true
     } catch {
@@ -49,27 +53,29 @@ export function useAuth() {
       // Ignore - clear state anyway
     }
     user.value = null
+    refreshTokenExpiry()
     await navigateTo('/login')
   }
 
   const ensureAuthenticated = async (): Promise<boolean> => {
     const headers = getHeaders()
-    const expiresAt = getTokenExpiry()
 
     try {
       // Token expired or missing - try refresh
-      if (isTokenExpired(expiresAt ?? undefined)) {
+      if (isTokenExpired(tokenExpiresAtCookie.value ?? undefined)) {
         await $fetch('/api/auth/refresh', { method: 'POST', headers })
+        refreshTokenExpiry()
       }
 
       // Load profile if not already loaded
       if (!user.value) {
-        user.value = await $fetch('/api/auth/profile', { headers })
+        user.value = await $fetch<AdminUserProfile>('/api/auth/profile', { headers })
       }
 
       return true
     } catch {
       user.value = null
+      refreshTokenExpiry()
       return false
     } finally {
       isLoading.value = false
@@ -80,6 +86,7 @@ export function useAuth() {
     user: readonly(user),
     isLoading: readonly(isLoading),
     isAuthenticated,
+    tokenExpiresAt,
     ensureAuthenticated,
     login,
     logout

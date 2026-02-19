@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CategoryFormData, CategoryAttributeFormData } from '~/schemas/category.schema'
+import type { CategoryAttributeFormData, CategoryFormData } from '~/schemas/category.schema'
 
 const route = useRoute()
 const toast = useToast()
@@ -57,7 +57,7 @@ async function handleSubmit(data: CategoryFormData) {
   })
 
   if (error.value || !result.value?.success) {
-    const errData = result.value?.error
+    const errData = (result.value as { error?: { title?: string; detail?: string } } | null)?.error
     toast.add({
       title: errData?.title || 'Error',
       description: errData?.detail || 'Failed to update category',

@@ -32,7 +32,7 @@ async function handleSubmit(data: ProductFormData) {
   })
 
   if (error.value || !result.value?.success) {
-    const errData = result.value?.error
+    const errData = (result.value as { error?: { title?: string; detail?: string } } | null)?.error
     toast.add({
       title: errData?.title || 'Error',
       description: errData?.detail || 'Failed to create product',
