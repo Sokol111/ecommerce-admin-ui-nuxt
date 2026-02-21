@@ -2,19 +2,17 @@
 import type { TableColumn } from '@nuxt/ui'
 import type { AttributeResponse } from '@sokol111/ecommerce-catalog-service-api'
 
-const route = useRoute()
-
-// Query params
-const page = computed(() => Number(route.query.page) || 1)
-const size = computed(() => Number(route.query.size) || 10)
-
-// Fetch attributes
-const { data, pending, error } = await useFetch('/api/catalog/attributes', {
-  query: {
-    page,
-    size
-  }
-})
+const {
+  items,
+  total,
+  pending,
+  error,
+  page,
+  size,
+  totalPages,
+  handlePageChange,
+  createRowActions
+} = useListPage<AttributeResponse>('/api/catalog/attributes')
 
 // Table columns
 const columns: TableColumn<AttributeResponse>[] = [
@@ -25,34 +23,6 @@ const columns: TableColumn<AttributeResponse>[] = [
   { accessorKey: 'enabled', header: 'Status' },
   { id: 'actions', header: '' }
 ]
-
-// Actions menu items
-function getRowActions(row: AttributeResponse) {
-  return [
-    [
-      {
-        label: 'Edit',
-        icon: 'i-lucide-pencil',
-        click: () => navigateTo(`/attribute/${row.id}/edit`)
-      }
-    ]
-  ]
-}
-
-// Pagination
-const totalPages = computed(() => {
-  if (!data.value) return 1
-  return Math.ceil(data.value.total / size.value)
-})
-
-function handlePageChange(newPage: number) {
-  navigateTo({
-    query: {
-      ...route.query,
-      page: newPage
-    }
-  })
-}
 
 // Type labels
 const typeLabels: Record<string, string> = {
@@ -66,35 +36,21 @@ const typeLabels: Record<string, string> = {
 
 <template>
   <div>
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold">Attributes</h1>
-        <UBadge v-if="data" color="neutral" variant="subtle">
-          {{ data.total }}
-        </UBadge>
-      </div>
-      <UButton to="/attribute/create" icon="i-lucide-plus">
-        Create Attribute
-      </UButton>
-    </div>
-
-    <!-- Error state -->
-    <UAlert
-      v-if="error"
-      color="error"
-      icon="i-lucide-alert-circle"
-      title="Error loading attributes"
-      :description="error.message"
-      class="mb-4"
+    <ListPageHeader
+      title="Attributes"
+      :total="total"
+      create-to="/attribute/create"
+      create-label="Create Attribute"
+      :error="error"
     />
 
     <!-- Table -->
     <UCard>
+      <TableSkeleton v-if="pending" :columns="6" />
       <UTable
+        v-else
         :columns="columns"
-        :data="data?.items || []"
-        :loading="pending"
+        :data="items"
       >
         <template #name-cell="{ row }">
           <span class="font-medium">{{ row.original.name }}</span>
@@ -117,13 +73,11 @@ const typeLabels: Record<string, string> = {
         </template>
 
         <template #enabled-cell="{ row }">
-          <UBadge :color="row.original.enabled ? 'success' : 'neutral'">
-            {{ row.original.enabled ? 'Enabled' : 'Disabled' }}
-          </UBadge>
+          <StatusBadge :enabled="row.original.enabled" />
         </template>
 
         <template #actions-cell="{ row }">
-          <UDropdownMenu :items="getRowActions(row.original)">
+          <UDropdownMenu :items="createRowActions(row.original, '/attribute')">
             <UButton
               color="neutral"
               variant="ghost"
@@ -139,7 +93,7 @@ const typeLabels: Record<string, string> = {
         <div class="flex justify-center">
           <UPagination
             :model-value="page"
-            :total="data?.total || 0"
+            :total="total"
             :items-per-page="size"
             @update:model-value="handlePageChange"
           />

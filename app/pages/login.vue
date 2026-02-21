@@ -7,7 +7,7 @@ definePageMeta({
 })
 
 const { login } = useAuth()
-const toast = useToast()
+const notify = useNotify()
 
 const schema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email format'),
@@ -29,11 +29,7 @@ async function onSubmit() {
   const success = await login(state.email, state.password)
 
   if (!success) {
-    toast.add({
-      title: 'Error',
-      description: 'Login failed',
-      color: 'error'
-    })
+    notify.error('Login failed')
   }
 
   isLoading.value = false

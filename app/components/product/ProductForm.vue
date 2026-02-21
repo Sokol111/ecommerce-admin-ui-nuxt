@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { z } from 'zod'
-import type { CategoryResponse } from '@sokol111/ecommerce-catalog-service-api'
-import { productSchema, type ProductFormData } from '~/schemas/product.schema'
+import type { CategoryResponse } from '@sokol111/ecommerce-catalog-service-api';
+import { productSchema, type ProductFormData } from '~/schemas/product.schema';
 
 const props = defineProps<{
   initialData?: Partial<ProductFormData>
@@ -13,7 +12,7 @@ const emit = defineEmits<{
   submit: [data: ProductFormData]
 }>()
 
-const toast = useToast()
+const notify = useNotify()
 const isSubmitting = ref(false)
 
 // Generate UUID for new products
@@ -25,8 +24,8 @@ function generateUUID() {
 const state = reactive<ProductFormData>({
   id: props.initialData?.id || generateUUID(),
   version: props.initialData?.version || 0,
-  imageId: props.initialData?.imageId || null,
-  categoryId: props.initialData?.categoryId || null,
+  imageId: props.initialData?.imageId ?? undefined,
+  categoryId: props.initialData?.categoryId ?? undefined,
   name: props.initialData?.name || '',
   description: props.initialData?.description || '',
   price: props.initialData?.price || 0,
@@ -44,6 +43,14 @@ const categoryOptions = computed(() =>
   }))
 )
 
+// Computed for categoryId to handle null/undefined conversion
+const categoryId = computed({
+  get: () => state.categoryId ?? undefined,
+  set: (value: string | undefined) => {
+    state.categoryId = value
+  }
+})
+
 async function onSubmit() {
   isSubmitting.value = true
 
@@ -54,11 +61,7 @@ async function onSubmit() {
     emit('submit', { ...state })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Validation failed'
-    toast.add({
-      title: 'Validation Error',
-      description: message,
-      color: 'error'
-    })
+    notify.error(message, 'Validation Error')
   } finally {
     isSubmitting.value = false
   }
@@ -90,7 +93,7 @@ async function onSubmit() {
       <!-- Category -->
       <UFormField label="Category" name="categoryId">
         <USelect
-          v-model="state.categoryId"
+          v-model="categoryId"
           :items="categoryOptions"
           placeholder="Select category"
           value-key="value"

@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { ApiErrorData } from '~/composables/useNotify'
 import type { AttributeFormData, AttributeOptionFormData } from '~/schemas/attribute.schema'
 
-const toast = useToast()
+const notify = useNotify()
 
 async function handleSubmit(data: AttributeFormData) {
   const { data: result, error } = await useFetch('/api/catalog/attributes', {
@@ -23,31 +24,26 @@ async function handleSubmit(data: AttributeFormData) {
   })
 
   if (error.value || !result.value?.success) {
-    const errData = 'error' in result.value! ? result.value.error : undefined
-    toast.add({
-      title: errData?.title || 'Error',
-      description: errData?.detail || 'Failed to create attribute',
-      color: 'error'
-    })
+    const errData = result.value && 'error' in result.value ? result.value.error as ApiErrorData : undefined
+    notify.crud.createFailed('Attribute', errData)
     return
   }
 
-  toast.add({
-    title: 'Success',
-    description: 'Attribute created successfully',
-    color: 'success'
-  })
-
+  notify.crud.created('Attribute')
   await navigateTo('/attribute')
 }
 </script>
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold">Create Attribute</h1>
-      <p class="text-muted mt-1">Add a new attribute to your catalog</p>
-    </div>
+    <PageHeader
+      title="Create Attribute"
+      description="Add a new attribute to your catalog"
+      :breadcrumbs="[
+        { label: 'Attributes', to: '/attribute', icon: 'i-lucide-tags' },
+        { label: 'Create' }
+      ]"
+    />
 
     <UCard>
       <AttributeForm @submit="handleSubmit" />

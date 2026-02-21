@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { ApiErrorData } from '~/composables/useNotify'
 import type { ProductFormData } from '~/schemas/product.schema'
 
 const route = useRoute()
-const toast = useToast()
+const notify = useNotify()
 
 const productId = computed(() => route.params.id as string)
 
@@ -67,31 +68,26 @@ async function handleSubmit(data: ProductFormData) {
   })
 
   if (error.value || !result.value?.success) {
-    const errData = (result.value as { error?: { title?: string; detail?: string } } | null)?.error
-    toast.add({
-      title: errData?.title || 'Error',
-      description: errData?.detail || 'Failed to update product',
-      color: 'error'
-    })
+    const errData = (result.value as { error?: ApiErrorData } | null)?.error
+    notify.crud.updateFailed('Product', errData)
     return
   }
 
-  toast.add({
-    title: 'Success',
-    description: 'Product updated successfully',
-    color: 'success'
-  })
-
+  notify.crud.updated('Product')
   await navigateTo('/product')
 }
 </script>
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold">Edit Product</h1>
-      <p class="text-muted mt-1">Update product information</p>
-    </div>
+    <PageHeader
+      title="Edit Product"
+      description="Update product information"
+      :breadcrumbs="[
+        { label: 'Products', to: '/product', icon: 'i-lucide-package' },
+        { label: 'Edit' }
+      ]"
+    />
 
     <UCard>
       <ProductForm

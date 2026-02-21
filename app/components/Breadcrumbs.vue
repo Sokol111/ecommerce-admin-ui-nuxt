@@ -1,0 +1,37 @@
+<script setup lang="ts">
+export interface BreadcrumbItem {
+  label: string
+  to?: string
+  icon?: string
+}
+
+defineProps<{
+  items: BreadcrumbItem[]
+}>()
+</script>
+
+<template>
+  <UBreadcrumb :items="items" class="mb-4">
+    <template #item="{ item, active }">
+      <ULink
+        v-if="!active && item.to"
+        :to="item.to"
+        class="flex items-center gap-1.5 text-muted hover:text-default transition-colors"
+      >
+        <UIcon v-if="item.icon" :name="item.icon" class="h-4 w-4" />
+        <span>{{ item.label }}</span>
+      </ULink>
+      <span
+        v-else
+        class="flex items-center gap-1.5 font-medium"
+      >
+        <UIcon v-if="item.icon" :name="item.icon" class="h-4 w-4" />
+        <span>{{ item.label }}</span>
+      </span>
+    </template>
+
+    <template #separator>
+      <UIcon name="i-lucide-chevron-right" class="h-4 w-4 text-muted" />
+    </template>
+  </UBreadcrumb>
+</template>

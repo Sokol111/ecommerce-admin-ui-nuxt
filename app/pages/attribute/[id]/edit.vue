@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { ApiErrorData } from '~/composables/useNotify'
 import type { AttributeFormData, AttributeOptionFormData } from '~/schemas/attribute.schema'
 
 const route = useRoute()
-const toast = useToast()
+const notify = useNotify()
 
 const attributeId = computed(() => route.params.id as string)
 
@@ -56,31 +57,26 @@ async function handleSubmit(data: AttributeFormData) {
   })
 
   if (error.value || !result.value?.success) {
-    const errData = 'error' in result.value! ? result.value.error : undefined
-    toast.add({
-      title: errData?.title || 'Error',
-      description: errData?.detail || 'Failed to update attribute',
-      color: 'error'
-    })
+    const errData = result.value && 'error' in result.value ? result.value.error as ApiErrorData : undefined
+    notify.crud.updateFailed('Attribute', errData)
     return
   }
 
-  toast.add({
-    title: 'Success',
-    description: 'Attribute updated successfully',
-    color: 'success'
-  })
-
+  notify.crud.updated('Attribute')
   await navigateTo('/attribute')
 }
 </script>
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold">Edit Attribute</h1>
-      <p class="text-muted mt-1">Update attribute information</p>
-    </div>
+    <PageHeader
+      title="Edit Attribute"
+      description="Update attribute information"
+      :breadcrumbs="[
+        { label: 'Attributes', to: '/attribute', icon: 'i-lucide-tags' },
+        { label: 'Edit' }
+      ]"
+    />
 
     <UCard>
       <AttributeForm

@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { ApiErrorData } from '~/composables/useNotify'
 import type { ProductFormData } from '~/schemas/product.schema'
 
-const toast = useToast()
+const notify = useNotify()
 
 // Fetch categories for the form
 const { data: categoriesData } = await useFetch('/api/catalog/categories')
@@ -32,31 +33,26 @@ async function handleSubmit(data: ProductFormData) {
   })
 
   if (error.value || !result.value?.success) {
-    const errData = (result.value as { error?: { title?: string; detail?: string } } | null)?.error
-    toast.add({
-      title: errData?.title || 'Error',
-      description: errData?.detail || 'Failed to create product',
-      color: 'error'
-    })
+    const errData = (result.value as { error?: ApiErrorData } | null)?.error
+    notify.crud.createFailed('Product', errData)
     return
   }
 
-  toast.add({
-    title: 'Success',
-    description: 'Product created successfully',
-    color: 'success'
-  })
-
+  notify.crud.created('Product')
   await navigateTo('/product')
 }
 </script>
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold">Create Product</h1>
-      <p class="text-muted mt-1">Add a new product to your catalog</p>
-    </div>
+    <PageHeader
+      title="Create Product"
+      description="Add a new product to your catalog"
+      :breadcrumbs="[
+        { label: 'Products', to: '/product', icon: 'i-lucide-package' },
+        { label: 'Create' }
+      ]"
+    />
 
     <UCard>
       <ProductForm

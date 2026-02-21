@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { ApiErrorData } from '~/composables/useNotify'
 import type { CategoryAttributeFormData, CategoryFormData } from '~/schemas/category.schema'
 
-const toast = useToast()
+const notify = useNotify()
 
 // Fetch attributes for the form
 const { data: attributesData } = await useFetch('/api/catalog/attributes')
@@ -27,31 +28,26 @@ async function handleSubmit(data: CategoryFormData) {
   })
 
   if (error.value || !result.value?.success) {
-    const errData = (result.value as { error?: { title?: string; detail?: string } } | null)?.error
-    toast.add({
-      title: errData?.title || 'Error',
-      description: errData?.detail || 'Failed to create category',
-      color: 'error'
-    })
+    const errData = (result.value as { error?: ApiErrorData } | null)?.error
+    notify.crud.createFailed('Category', errData)
     return
   }
 
-  toast.add({
-    title: 'Success',
-    description: 'Category created successfully',
-    color: 'success'
-  })
-
+  notify.crud.created('Category')
   await navigateTo('/category')
 }
 </script>
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold">Create Category</h1>
-      <p class="text-muted mt-1">Add a new category to your catalog</p>
-    </div>
+    <PageHeader
+      title="Create Category"
+      description="Add a new category to your catalog"
+      :breadcrumbs="[
+        { label: 'Categories', to: '/category', icon: 'i-lucide-folder-tree' },
+        { label: 'Create' }
+      ]"
+    />
 
     <UCard>
       <CategoryForm

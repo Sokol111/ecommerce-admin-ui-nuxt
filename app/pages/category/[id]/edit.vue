@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { ApiErrorData } from '~/composables/useNotify'
 import type { CategoryAttributeFormData, CategoryFormData } from '~/schemas/category.schema'
 
 const route = useRoute()
-const toast = useToast()
+const notify = useNotify()
 
 const categoryId = computed(() => route.params.id as string)
 
@@ -57,31 +58,26 @@ async function handleSubmit(data: CategoryFormData) {
   })
 
   if (error.value || !result.value?.success) {
-    const errData = (result.value as { error?: { title?: string; detail?: string } } | null)?.error
-    toast.add({
-      title: errData?.title || 'Error',
-      description: errData?.detail || 'Failed to update category',
-      color: 'error'
-    })
+    const errData = (result.value as { error?: ApiErrorData } | null)?.error
+    notify.crud.updateFailed('Category', errData)
     return
   }
 
-  toast.add({
-    title: 'Success',
-    description: 'Category updated successfully',
-    color: 'success'
-  })
-
+  notify.crud.updated('Category')
   await navigateTo('/category')
 }
 </script>
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold">Edit Category</h1>
-      <p class="text-muted mt-1">Update category information</p>
-    </div>
+    <PageHeader
+      title="Edit Category"
+      description="Update category information"
+      :breadcrumbs="[
+        { label: 'Categories', to: '/category', icon: 'i-lucide-folder-tree' },
+        { label: 'Edit' }
+      ]"
+    />
 
     <UCard>
       <CategoryForm

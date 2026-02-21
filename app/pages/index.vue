@@ -1,11 +1,37 @@
 <script setup lang="ts">
 const { user } = useAuth()
 
-const stats = [
-  { label: 'Products', value: '—', icon: 'i-lucide-package', to: '/product' },
-  { label: 'Categories', value: '—', icon: 'i-lucide-folder-tree', to: '/category' },
-  { label: 'Attributes', value: '—', icon: 'i-lucide-tags', to: '/attribute' }
-]
+// Fetch counts from existing endpoints (size=1 to minimize payload)
+const [
+  { data: productsData },
+  { data: categoriesData },
+  { data: attributesData }
+] = await Promise.all([
+  useFetch('/api/catalog/products', { query: { size: 1 } }),
+  useFetch('/api/catalog/categories', { query: { size: 1 } }),
+  useFetch('/api/catalog/attributes', { query: { size: 1 } })
+])
+
+const stats = computed(() => [
+  {
+    label: 'Products',
+    value: productsData.value?.total ?? '—',
+    icon: 'i-lucide-package',
+    to: '/product'
+  },
+  {
+    label: 'Categories',
+    value: categoriesData.value?.total ?? '—',
+    icon: 'i-lucide-folder-tree',
+    to: '/category'
+  },
+  {
+    label: 'Attributes',
+    value: attributesData.value?.total ?? '—',
+    icon: 'i-lucide-tags',
+    to: '/attribute'
+  }
+])
 </script>
 
 <template>

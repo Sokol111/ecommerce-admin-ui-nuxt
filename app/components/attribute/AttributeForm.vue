@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import {
-  attributeSchema,
-  generateSlug,
-  ATTRIBUTE_TYPES,
-  type AttributeFormData,
-  type AttributeOptionFormData
-} from '~/schemas/attribute.schema'
+    ATTRIBUTE_TYPES,
+    attributeSchema,
+    generateSlug,
+    type AttributeFormData
+} from '~/schemas/attribute.schema';
 
 const props = defineProps<{
   initialData?: Partial<AttributeFormData>
@@ -16,7 +15,7 @@ const emit = defineEmits<{
   submit: [data: AttributeFormData]
 }>()
 
-const toast = useToast()
+const notify = useNotify()
 const isSubmitting = ref(false)
 
 // Generate UUID for new attributes
@@ -88,11 +87,7 @@ async function onSubmit() {
     emit('submit', { ...state })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Validation failed'
-    toast.add({
-      title: 'Validation Error',
-      description: message,
-      color: 'error'
-    })
+    notify.error(message, 'Validation Error')
   } finally {
     isSubmitting.value = false
   }

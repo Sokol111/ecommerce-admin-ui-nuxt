@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { AttributeResponse } from '@sokol111/ecommerce-catalog-service-api'
-import { categorySchema, type CategoryFormData, type CategoryAttributeFormData } from '~/schemas/category.schema'
+import type { AttributeResponse } from '@sokol111/ecommerce-catalog-service-api';
+import { categorySchema, type CategoryFormData } from '~/schemas/category.schema';
 
 const props = defineProps<{
   initialData?: Partial<CategoryFormData>
@@ -12,7 +12,7 @@ const emit = defineEmits<{
   submit: [data: CategoryFormData]
 }>()
 
-const toast = useToast()
+const notify = useNotify()
 const isSubmitting = ref(false)
 
 // Generate UUID for new categories
@@ -48,10 +48,11 @@ const roleOptions = [
 
 // Add attribute
 function addAttribute() {
-  if (availableAttributeOptions.value.length === 0) return
+  const firstOption = availableAttributeOptions.value[0]
+  if (!firstOption) return
 
   state.attributes.push({
-    attributeId: availableAttributeOptions.value[0].value,
+    attributeId: firstOption.value,
     role: 'specification',
     required: false,
     sortOrder: state.attributes.length,
@@ -77,11 +78,7 @@ async function onSubmit() {
     emit('submit', { ...state })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Validation failed'
-    toast.add({
-      title: 'Validation Error',
-      description: message,
-      color: 'error'
-    })
+    notify.error(message, 'Validation Error')
   } finally {
     isSubmitting.value = false
   }
